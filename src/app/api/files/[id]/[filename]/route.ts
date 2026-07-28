@@ -16,7 +16,7 @@ function contentDispositionHeader(
   const asciiFallback =
     filename.replace(/[\x00-\x1f"\\]/g, "").replace(/[^\x20-\x7e]/g, "_") ||
     "file";
-  return `${type}; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
+  return `${type}; filename="${asciiFallback}"; filename*=${encodeURIComponent(filename)}`;
 }
 
 export async function GET(
@@ -42,8 +42,6 @@ export async function GET(
     request.nextUrl.searchParams.get("download") !== null
       ? "attachment"
       : "inline";
-
-  alert(file.filename);
 
   return new NextResponse(webStream, {
     headers: {
