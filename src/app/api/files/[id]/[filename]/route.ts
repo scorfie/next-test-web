@@ -5,6 +5,16 @@ import { mimeTypeForFilename } from "@/lib/mimeTypes";
 
 export const runtime = "nodejs";
 
+// RFC 6266: `filename=` is a legacy quoted-string, not a place for percent-encoding —
+// stuffing an encodeURIComponent()'d name in there can leave stray characters (like a
+// trailing quote) in what browsers save to disk. Ship a sanitized ASCII fallback plus
+// a correctly percent-encoded `filename*=UTF-8''...` for full-fidelity names.
+function contentDispositionHeader(type: "inline" | "attachment", filename: string): string {
+  const asciiFallback =
+    filename.replace(/[\x00-\x1f"\\]/g, "").replace(/[^\x20-\x7e]/g, "_") || "file";
+  return `${type}; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; filename: string }> },
@@ -27,7 +37,7 @@ export async function GET(
     headers: {
       "Content-Type": mimeTypeForFilename(filename),
       "Content-Length": String(file.buffer.length),
-      "Content-Disposition": `${disposition}; filename="${encodeURIComponent(file.filename)}"`,
+      "Content-Disposition": contentDispositionHeader(disposition, file.filename),
       "Cache-Control": "no-store",
     },
   });
