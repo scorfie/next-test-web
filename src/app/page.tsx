@@ -49,6 +49,7 @@ export default function Home() {
         throw new Error(data.error ?? "Failed to create file.");
       }
       const url = download ? `${data.url}?download` : data.url;
+      setSubmitting(false);
       window.location.href = url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
