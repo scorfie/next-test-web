@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const SAMPLE_BASE64 =
   "SGVsbG8gZnJvbSBhIGZpbGUgY3JlYXRlZCBlbnRpcmVseSBpbiBtZW1vcnkh"; // "Hello from a file created entirely in memory!"
@@ -11,6 +11,19 @@ export default function Home() {
   const [download, setDownload] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Pressing "back" from the file URL restores this page from the browser's
+  // bfcache in whatever state it was in right before navigation — including
+  // submitting=true, which would otherwise leave the button disabled forever.
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) {
+        setSubmitting(false);
+      }
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   async function handlePickFile(file: File) {
     const buffer = await file.arrayBuffer();
